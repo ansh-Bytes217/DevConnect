@@ -25,9 +25,21 @@ export const AuthProvider = ({ children }) => {
             _id: 'mock_guest_9999',
             username: 'GuestDev_9999',
             email: 'guest@devconnect.com',
-            bio: 'Guest Developer Profile (Offline Demo Mode)',
-            skills: [{ name: 'React', endorsedBy: [] }, { name: 'Node.js', endorsedBy: [] }],
-            experience: [{ company: 'DevConnect Inc.', role: 'Guest Contributor', duration: '2026 - Present', description: 'Testing the frontend components locally.' }],
+            bio: 'Lead Full-Stack Architect | Scaling Solutions',
+            skills: [
+              { name: 'React', endorsedBy: [] }, 
+              { name: 'Node.js', endorsedBy: [] },
+              { name: 'Mongoose Proxies', endorsedBy: [] },
+              { name: 'Offline Caching', endorsedBy: [] }
+            ],
+            experience: [
+              { 
+                company: 'DevConnect Inc. (Scale-out Labs)', 
+                role: 'Lead Full-Stack Architect', 
+                duration: '2026 - Present', 
+                description: 'Architected and built the full-stack DevConnect platform (WebSockets chat, Jitsi meet, ATS scanner, Kafka diagnostics). Resolved database server infrastructure constraints by designing an automatic Mongoose Proxy schema wrapper that falls back seamlessly to localized JSON caches.' 
+              }
+            ],
             education: [{ school: 'Self-Taught Academy', degree: 'Software Engineer', duration: '2024 - 2026' }],
             badge: 'open-to-work',
             connections: []
@@ -122,9 +134,21 @@ export const AuthProvider = ({ children }) => {
         _id: `mock_guest_${randomSuffix}`,
         username: guestUsername,
         email: guestEmail,
-        bio: 'Guest Developer Profile (Offline Demo Mode)',
-        skills: [{ name: 'React', endorsedBy: [] }, { name: 'Node.js', endorsedBy: [] }],
-        experience: [{ company: 'DevConnect Inc.', role: 'Guest Contributor', duration: '2026 - Present', description: 'Testing the frontend components locally.' }],
+        bio: 'Lead Full-Stack Architect | Scaling Solutions',
+        skills: [
+          { name: 'React', endorsedBy: [] }, 
+          { name: 'Node.js', endorsedBy: [] },
+          { name: 'Mongoose Proxies', endorsedBy: [] },
+          { name: 'Offline Caching', endorsedBy: [] }
+        ],
+        experience: [
+          { 
+            company: 'DevConnect Inc. (Scale-out Labs)', 
+            role: 'Lead Full-Stack Architect', 
+            duration: '2026 - Present', 
+            description: 'Architected and built the full-stack DevConnect platform (WebSockets chat, Jitsi meet, ATS scanner, Kafka diagnostics). Resolved database server infrastructure constraints by designing an automatic Mongoose Proxy schema wrapper that falls back seamlessly to localized JSON caches.' 
+          }
+        ],
         education: [{ school: 'Self-Taught Academy', degree: 'Software Engineer', duration: '2024 - 2026' }],
         badge: 'open-to-work',
         connections: []
