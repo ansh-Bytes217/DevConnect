@@ -12,7 +12,7 @@ import {
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Landing = () => {
-  const { guestLogin } = useAuth();
+  const { loginAsGuest } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -24,7 +24,7 @@ const Landing = () => {
   const [isTrendingOpen, setIsTrendingOpen] = useState(false);
 
   const handleGuestAccess = () => {
-    guestLogin();
+    loginAsGuest();
     addToast('Logged in as Guest Dev (Sandbox Mode)', 'success');
     navigate('/');
   };
@@ -32,7 +32,7 @@ const Landing = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     // Redirect guest or notify user
-    guestLogin();
+    loginAsGuest();
     addToast(`Searching for "${roleQuery}" in "${locQuery}" (Guest Mode)`, 'info');
     navigate(`/jobs?q=${roleQuery}`);
   };
@@ -168,7 +168,7 @@ const Landing = () => {
               <div 
                 key={idx}
                 onClick={() => {
-                  guestLogin();
+                  loginAsGuest();
                   addToast(`Opening ${cat.title} directory`, 'success');
                   navigate(`/jobs?q=${cat.title}`);
                 }}
