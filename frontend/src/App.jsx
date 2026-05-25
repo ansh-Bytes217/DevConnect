@@ -45,11 +45,10 @@ const AppLayout = () => {
   const { user } = useAuth();
   
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col pb-16 lg:pb-0">
       <Navbar />
-      <div className="flex-1 flex overflow-hidden">
-        {user && <Sidebar />}
-        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
+      <div className="flex-1 flex flex-col">
+        <main className="flex-1 px-4 md:px-6 py-6 max-w-6xl mx-auto w-full">
           <Routes>
             {/* Protected Routes */}
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />

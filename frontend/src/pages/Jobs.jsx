@@ -328,53 +328,73 @@ const Jobs = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4 space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 py-2">
       
-      {/* HEADER SECTION WITH BOARD TABS */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
-            <Briefcase size={24} className="text-indigo-400" />
-            <span>Developer Job Directory</span>
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">Discover jobs matching your skills or list open roles in your team.</p>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          <div className="flex space-x-1.5 bg-slate-950 p-1 rounded-2xl border border-slate-900">
+      {/* LEFT COLUMN: JOB BOARD NAVIGATION SHORTCUTS */}
+      <div className="lg:col-span-3 space-y-6">
+        <div className="glass-panel p-4 rounded-3xl border border-white/5 shadow-xl space-y-4">
+          <h3 className="font-extrabold text-xs text-white uppercase tracking-wider pl-2 border-b border-white/5 pb-2">
+            Job Console
+          </h3>
+          
+          <div className="flex flex-col space-y-1">
             <button
               onClick={() => setActiveTab('board')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
                 activeTab === 'board'
-                  ? 'bg-indigo-650 text-indigo-100 shadow-md'
-                  : 'text-slate-450 hover:text-slate-200'
+                  ? 'bg-indigo-600/15 text-indigo-400 border-indigo-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
               }`}
             >
-              Find Jobs
+              <Briefcase size={16} />
+              <span>Find Jobs</span>
             </button>
+
             <button
               onClick={() => setActiveTab('recruiter')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
                 activeTab === 'recruiter'
-                  ? 'bg-indigo-650 text-indigo-100 shadow-md'
-                  : 'text-slate-455 hover:text-slate-200'
+                  ? 'bg-indigo-600/15 text-indigo-400 border-indigo-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
               }`}
             >
-              Recruiter Console
+              <Users2 size={16} />
+              <span>Recruiter Console</span>
             </button>
           </div>
 
           <button
             onClick={() => setShowPostModal(true)}
-            className="bg-indigo-605 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-2xl text-xs flex items-center space-x-1.5 transition-colors shadow-lg shadow-indigo-600/10"
+            className="w-full bg-indigo-600 hover:bg-indigo-750 text-white font-bold py-2.5 px-4 rounded-2xl text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-indigo-600/15"
           >
             <Plus size={14} />
             <span>Post a Job</span>
           </button>
         </div>
+
+        {/* LinkedIn-style tools */}
+        <div className="glass-panel p-4 rounded-3xl border border-white/5 shadow-xl space-y-3">
+          <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Job Seeker Tools</span>
+          <div className="space-y-2 text-xs text-slate-400">
+            <div className="flex items-center space-x-2.5 hover:text-white transition-colors cursor-pointer">
+              <Bookmark size={14} className="text-indigo-400" />
+              <span>My Jobs</span>
+            </div>
+            <div className="flex items-center space-x-2.5 hover:text-white transition-colors cursor-pointer">
+              <Bell size={14} className="text-indigo-400" />
+              <span>Job Alerts</span>
+            </div>
+            <div className="flex items-center space-x-2.5 hover:text-white transition-colors cursor-pointer">
+              <ShieldCheck size={14} className="text-indigo-400" />
+              <span>Skill Assessments</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {activeTab === 'recruiter' ? (
+      {/* RIGHT COLUMN: MAIN CONTENT FEED (BOARD OR ANALYTICS) */}
+      <div className="lg:col-span-9">
+        {activeTab === 'recruiter' ? (
         /* RECRUITER CONSOLE TAB */
         <div className="space-y-6">
           {/* Analytics Cards Grid */}
@@ -943,6 +963,7 @@ const Jobs = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
 
     </div>
   );
