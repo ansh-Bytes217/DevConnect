@@ -1,5 +1,4 @@
-# DevConnect - Full-Stack Web Application (Made by Ansh Malhotra)
-
+# DevConnect - Full-Stack Web Application 
 DevConnect is a modern, dynamic, and fully functional social network web application that allows users to connect, share posts, meet virtually, and more. Built with React for the frontend and Node.js with Express for the backend, it offers various features that make it a perfect showcase of full-stack development skills.
 
 ## Features
