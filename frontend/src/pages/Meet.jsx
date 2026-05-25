@@ -58,6 +58,16 @@ const Meet = () => {
   }, [location]);
 
   const fetchConnections = async () => {
+    const token = localStorage.getItem('token');
+    if (!token || token === 'mock-guest-token') {
+      const mockConns = [
+        { _id: 'mock_user_dan', username: 'Dan_The_Coder', profilePicture: 'https://api.dicebear.com/7.x/bottts/svg?seed=Dan', bio: 'Tech Lead @ Vercel | Building Next.js', status: 'coding', badge: 'hiring' },
+        { _id: 'mock_user_sarah', username: 'Sarah_ShaderArt', profilePicture: 'https://api.dicebear.com/7.x/bottts/svg?seed=Sarah', bio: 'WebGL Shader Engineer | Berlin', status: 'online', badge: 'open-to-work' }
+      ];
+      setConnections(mockConns);
+      return;
+    }
+
     try {
       const res = await axios.get('/connections');
       const connectionList = res.data.map(conn => 

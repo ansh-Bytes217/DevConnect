@@ -96,7 +96,7 @@ const BigDataConsole = () => {
     try {
       const token = localStorage.getItem('token');
       // If we have a token (online mode)
-      if (token) {
+      if (token && token !== 'mock-guest-token') {
         const res = await axios.get(`${API_URL}/analytics/metrics`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -196,7 +196,7 @@ const BigDataConsole = () => {
         };
 
         const token = localStorage.getItem('token');
-        if (token) {
+        if (token && token !== 'mock-guest-token') {
           try {
             const res = await axios.post(`${API_URL}/analytics/mock-event`, {
               type: randomType,
@@ -332,7 +332,7 @@ const BigDataConsole = () => {
 
     setTimeout(async () => {
       try {
-        if (token) {
+        if (token && token !== 'mock-guest-token') {
           const res = await axios.post(`${API_URL}/analytics/mapreduce`, { filePath: selectedHdfsFile }, {
             headers: { Authorization: `Bearer ${token}` }
           });

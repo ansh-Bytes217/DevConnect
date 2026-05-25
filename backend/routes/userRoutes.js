@@ -80,7 +80,7 @@ router.get('/profile/:id', auth, async (req, res) => {
 // Update User Profile (Authenticated)
 router.put('/profile', auth, async (req, res) => {
   try {
-    const { bio, profilePicture, skills, experience, education, badge } = req.body;
+    const { bio, profilePicture, githubUsername, skills, experience, education, badge } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.userId,
@@ -88,6 +88,7 @@ router.put('/profile', auth, async (req, res) => {
         $set: {
           bio: bio || "",
           profilePicture: profilePicture || "",
+          githubUsername: githubUsername || "",
           skills: skills || [],
           experience: experience || [],
           education: education || [],

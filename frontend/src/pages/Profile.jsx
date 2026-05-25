@@ -24,6 +24,7 @@ const Profile = () => {
   // Form Fields
   const [bio, setBio] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
+  const [githubUsername, setGithubUsername] = useState('');
   const [badge, setBadge] = useState('none');
   const [newSkill, setNewSkill] = useState('');
 
@@ -37,11 +38,14 @@ const Profile = () => {
   const [eduDegree, setEduDegree] = useState('');
   const [eduDuration, setEduDuration] = useState('');
 
-  // Simulated Pinned Repos
-  const pinnedRepos = [
-    { name: 'websocket-message-broker', desc: 'Lightweight publish-subscribe message broker built in Go utilizing standard channels.', lang: 'Go', stars: 124 },
-    { name: 'threejs-shader-art', desc: 'Creative canvas drawing shaders in WebGL with custom vertex displacement mapping.', lang: 'JavaScript', stars: 89 },
-    { name: 'nextjs-saas-boilerplate', desc: 'SaaS framework template equipped with Docker clusters, auth setups, and stripe integrations.', lang: 'TypeScript', stars: 312 },
+  // Pinned Repos States
+  const [repos, setRepos] = useState([]);
+  const [fetchingRepos, setFetchingRepos] = useState(false);
+
+  const defaultRepos = [
+    { name: 'websocket-message-broker', desc: 'Lightweight publish-subscribe message broker built in Go utilizing standard channels.', lang: 'Go', stars: 124, html_url: '#' },
+    { name: 'threejs-shader-art', desc: 'Creative canvas drawing shaders in WebGL with custom vertex displacement mapping.', lang: 'JavaScript', stars: 89, html_url: '#' },
+    { name: 'nextjs-saas-boilerplate', desc: 'SaaS framework template equipped with Docker clusters, auth setups, and stripe integrations.', lang: 'TypeScript', stars: 312, html_url: '#' }
   ];
 
   // Simulating GitHub activity grids (4 rows representing weeks, days representing activity levels)
@@ -52,6 +56,30 @@ const Profile = () => {
   useEffect(() => {
     fetchProfile();
   }, [id, currentUser]);
+
+  useEffect(() => {
+    if (profileUser?.githubUsername) {
+      setFetchingRepos(true);
+      axios.get(`https://api.github.com/users/${profileUser.githubUsername}/repos?sort=updated&per_page=6`)
+        .then(res => {
+          const formatted = res.data.map(r => ({
+            name: r.name,
+            desc: r.description || 'No description provided.',
+            lang: r.language || 'Code',
+            stars: r.stargazers_count,
+            html_url: r.html_url
+          }));
+          setRepos(formatted.slice(0, 3));
+        })
+        .catch(err => {
+          console.warn('GitHub API fetch failed, utilizing fallback repos:', err.message);
+          setRepos(defaultRepos);
+        })
+        .finally(() => setFetchingRepos(false));
+    } else {
+      setRepos(defaultRepos);
+    }
+  }, [profileUser?.githubUsername]);
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -68,10 +96,17 @@ const Profile = () => {
       setBio(res.data.bio || '');
       setProfilePicture(res.data.profilePicture || '');
       setBadge(res.data.badge || 'none');
+      setGithubUsername(res.data.githubUsername || '');
     } catch (err) {
       console.error('Error loading profile, fallback mock active:', err.message);
       // Fallback
       setProfileUser(currentUser);
+      if (currentUser) {
+        setBio(currentUser.bio || '');
+        setProfilePicture(currentUser.profilePicture || '');
+        setBadge(currentUser.badge || 'none');
+        setGithubUsername(currentUser.githubUsername || '');
+      }
     } finally {
       setLoading(false);
     }
@@ -83,6 +118,7 @@ const Profile = () => {
       const updated = await updateProfile({
         bio,
         profilePicture,
+        githubUsername,
         badge,
         skills: profileUser.skills,
         experience: profileUser.experience,
@@ -195,6 +231,28 @@ const Profile = () => {
 
   const handleEndorse = async (skillName) => {
     if (isSelf) return;
+    const token = localStorage.getItem('token');
+    if (!token || token === 'mock-guest-token') {
+      const updatedSkills = profileUser.skills.map(s => {
+        if (s.name.toLowerCase() === skillName.toLowerCase()) {
+          const endorsedBy = Array.isArray(s.endorsedBy) ? s.endorsedBy : [];
+          const hasEndorsed = endorsedBy.some(id => id === currentUser?._id);
+          const nextEndorsedBy = hasEndorsed 
+            ? endorsedBy.filter(id => id !== currentUser?._id)
+            : [...endorsedBy, currentUser?._id];
+          return { ...s, endorsedBy: nextEndorsedBy };
+        }
+        return s;
+      });
+      const updated = { ...profileUser, skills: updatedSkills };
+      setProfileUser(updated);
+      if (profileUser._id === currentUser?._id) {
+        localStorage.setItem('mock_user', JSON.stringify(updated));
+      }
+      addToast(`Updated endorsement for ${skillName}!`, 'success');
+      return;
+    }
+
     try {
       const res = await axios.post('/users/endorse', { targetUserId: profileUser._id, skillName });
       setProfileUser(res.data);
@@ -333,6 +391,16 @@ const Profile = () => {
                 <option value="hiring">Hiring</option>
               </select>
             </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">GitHub Username</label>
+              <input
+                type="text"
+                value={githubUsername}
+                onChange={(e) => setGithubUsername(e.target.value)}
+                placeholder="e.g. gaearon"
+                className="w-full glass-input rounded-xl px-4 py-2.5 text-xs text-white"
+              />
+            </div>
           </div>
           <div className="flex justify-end space-x-3 pt-2">
             <button
@@ -379,7 +447,30 @@ const Profile = () => {
               </h3>
               
               <button
-                onClick={() => addToast('Simulated GitHub Repo Sync complete!', 'success')}
+                onClick={() => {
+                  if (profileUser?.githubUsername) {
+                    setFetchingRepos(true);
+                    axios.get(`https://api.github.com/users/${profileUser.githubUsername}/repos?sort=updated&per_page=6`)
+                      .then(res => {
+                        const formatted = res.data.map(r => ({
+                          name: r.name,
+                          desc: r.description || 'No description provided.',
+                          lang: r.language || 'Code',
+                          stars: r.stargazers_count,
+                          html_url: r.html_url
+                        }));
+                        setRepos(formatted.slice(0, 3));
+                        addToast('GitHub Repositories synchronized!', 'success');
+                      })
+                      .catch(err => {
+                        console.warn(err);
+                        addToast('Failed to sync. Using fallback data.', 'error');
+                      })
+                      .finally(() => setFetchingRepos(false));
+                  } else {
+                    addToast('Configure a GitHub username in edit settings first!', 'warning');
+                  }
+                }}
                 className="bg-slate-900 border border-white/5 hover:border-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl text-[10px] font-bold flex items-center space-x-1 transition-all"
               >
                 <GitPullRequest size={10} />
@@ -388,23 +479,36 @@ const Profile = () => {
             </div>
 
             {/* Pinned repos grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {pinnedRepos.map((repo, idx) => (
-                <div key={idx} className="bg-slate-950/45 border border-white/5 p-4 rounded-2xl flex flex-col justify-between space-y-3.5">
-                  <div className="space-y-1">
-                    <span className="font-bold text-xs text-slate-100 block truncate">{repo.name}</span>
-                    <p className="text-[10px] text-slate-450 line-clamp-2 leading-relaxed">{repo.desc}</p>
-                  </div>
-                  <div className="flex justify-between items-center text-[10px] text-slate-500 pt-2 border-t border-slate-900/60">
-                    <span className="flex items-center space-x-1">
-                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-                      <span>{repo.lang}</span>
-                    </span>
-                    <span>★ {repo.stars}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {fetchingRepos ? (
+              <div className="h-28 flex flex-col items-center justify-center space-y-2">
+                <Loader2 className="animate-spin text-indigo-500 w-6 h-6" />
+                <span className="text-[10px] text-slate-500 font-bold">Fetching repositories...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {repos.map((repo, idx) => (
+                  <a 
+                    key={idx} 
+                    href={repo.html_url || '#'} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="bg-slate-950/45 hover:bg-slate-900/60 border border-white/5 hover:border-indigo-500/10 p-4 rounded-2xl flex flex-col justify-between space-y-3.5 transition-all group"
+                  >
+                    <div className="space-y-1">
+                      <span className="font-bold text-xs text-slate-100 group-hover:text-indigo-400 transition-colors block truncate">{repo.name}</span>
+                      <p className="text-[10px] text-slate-450 line-clamp-2 leading-relaxed">{repo.desc}</p>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] text-slate-500 pt-2 border-t border-slate-900/60">
+                      <span className="flex items-center space-x-1">
+                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                        <span>{repo.lang}</span>
+                      </span>
+                      <span>★ {repo.stars}</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
 
             {/* Code contribution heatmap grid */}
             <div className="space-y-3 pt-2">
