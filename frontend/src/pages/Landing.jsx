@@ -5,18 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { 
-  Terminal, Search, MapPin, ArrowRight, ChevronDown, ChevronUp, 
-  Briefcase, Users2, Database, ShieldCheck, Flame, Cpu 
+  Search, MapPin, ArrowRight, ChevronDown, ChevronUp, Terminal 
 } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Landing = () => {
   const { loginAsGuest } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  // Search input state
+  // Search inputs
   const [roleQuery, setRoleQuery] = useState('');
   const [locQuery, setLocQuery] = useState('');
 
@@ -31,102 +28,126 @@ const Landing = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    // Redirect guest or notify user
     loginAsGuest();
     addToast(`Searching for "${roleQuery}" in "${locQuery}" (Guest Mode)`, 'info');
     navigate(`/jobs?q=${roleQuery}`);
   };
 
-  const jobCategories = [
-    { title: 'Frontend Developer', desc: 'React, Tailwind CSS, Vite', count: '1,240 open roles' },
-    { title: 'Backend Architect', desc: 'Node.js, Express, MongoDB', count: '890 open roles' },
-    { title: 'Data Engineer', desc: 'Kafka, Spark, Hadoop', count: '450 open roles' },
-    { title: 'DevOps Systems', desc: 'Docker, Kubernetes, AWS', count: '310 open roles' },
-    { title: 'Machine Learning', desc: 'Python, PyTorch, ALS', count: '520 open roles' },
-    { title: 'Security Consultant', desc: 'Auth, JWT, Cryptography', count: '180 open roles' }
-  ];
-
   return (
-    <div className="min-h-[85vh] flex flex-col justify-between py-6 max-w-6xl mx-auto px-4 space-y-12">
+    // Fixed full-screen wrapper with white background to match Indeed layout exactly
+    <div className="fixed inset-0 overflow-y-auto bg-white text-[#2d2d2d] z-[100] flex flex-col justify-between font-sans">
       
-      {/* MAIN CONTAINER (Centered Indeed Layout) */}
-      <div className="flex-1 flex flex-col justify-center space-y-10 py-6">
+      {/* 1. INDEED-STYLE HEADER */}
+      <header className="w-full bg-white border-b border-slate-200 py-3 px-6 md:px-12 flex justify-between items-center flex-shrink-0">
         
-        {/* 1. DUAL DOCK SEARCH BAR (Indeed Style) */}
+        {/* Left Side: Logo & Tabs */}
+        <div className="flex items-center space-x-6">
+          <Link to="/" className="flex items-center space-x-1.5 text-[#2557a7] hover:opacity-90 transition-opacity">
+            <Terminal className="w-6 h-6 stroke-[3]" />
+            <span className="text-xl font-extrabold tracking-tight">devconnect</span>
+          </Link>
+
+          <div className="hidden md:flex items-center space-x-4 text-xs font-bold text-[#474747]">
+            <Link to="/landing" className="text-[#2557a7] pb-3 border-b-2 border-[#2557a7] pt-1">
+              Home
+            </Link>
+            <span onClick={handleGuestAccess} className="hover:text-slate-900 cursor-pointer transition-colors pb-3 pt-1">
+              Company reviews
+            </span>
+            <span onClick={handleGuestAccess} className="hover:text-slate-900 cursor-pointer transition-colors pb-3 pt-1">
+              Salary guide
+            </span>
+          </div>
+        </div>
+
+        {/* Right Side: Sign-In / Post Jobs */}
+        <div className="flex items-center space-x-4 text-xs font-bold">
+          <Link to="/signin" className="text-[#2557a7] hover:underline">
+            Sign in
+          </Link>
+          <span className="text-slate-300">|</span>
+          <Link to="/signup" className="text-[#474747] hover:text-slate-950 transition-colors">
+            Employers / Post Job
+          </Link>
+        </div>
+
+      </header>
+
+      {/* 2. BODY CONTENT (Indeed Layout) */}
+      <main className="flex-1 flex flex-col justify-center py-10 px-4 max-w-4xl mx-auto w-full space-y-12">
+        
+        {/* Search Block Card */}
         <form 
           onSubmit={handleSearchSubmit}
-          className="flex flex-col md:flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl md:rounded-full p-2 w-full max-w-3xl mx-auto shadow-2xl space-y-2.5 md:space-y-0"
+          className="w-full max-w-3xl mx-auto bg-white border border-slate-300 rounded-2xl shadow-md p-1 flex flex-col md:flex-row items-center divide-y md:divide-y-0 md:divide-x divide-slate-200"
         >
-          {/* Input 1: Role/Skill */}
-          <div className="relative flex-1 w-full flex items-center px-2">
-            <Search className="text-slate-500 w-4 h-4 ml-2 flex-shrink-0" />
+          {/* Input 1: Skill/Role */}
+          <div className="relative flex-1 w-full flex items-center py-2 px-3">
+            <Search className="text-[#595959] w-5 h-5 flex-shrink-0" />
             <input
               type="text"
-              placeholder="Job title, keywords, or skills"
+              placeholder="Job title, keywords, or company"
               value={roleQuery}
               onChange={(e) => setRoleQuery(e.target.value)}
-              className="w-full bg-transparent px-3 py-2 text-xs text-slate-200 outline-none placeholder-slate-500"
+              className="w-full bg-transparent px-3 py-1 text-sm text-[#2d2d2d] outline-none placeholder-[#595959] font-medium"
             />
           </div>
-
-          {/* Desktop divider */}
-          <div className="hidden md:block w-px h-6 bg-slate-800"></div>
 
           {/* Input 2: Location */}
-          <div className="relative flex-1 w-full flex items-center px-2">
-            <MapPin className="text-slate-500 w-4 h-4 ml-2 flex-shrink-0" />
+          <div className="relative flex-1 w-full flex items-center py-2 px-3">
+            <MapPin className="text-[#595959] w-5 h-5 flex-shrink-0" />
             <input
               type="text"
-              placeholder="City, state, zip code, or 'remote'"
+              placeholder='City, state, zip code, or "remote"'
               value={locQuery}
               onChange={(e) => setLocQuery(e.target.value)}
-              className="w-full bg-transparent px-3 py-2 text-xs text-slate-200 outline-none placeholder-slate-500"
+              className="w-full bg-transparent px-3 py-1 text-sm text-[#2d2d2d] outline-none placeholder-[#595959] font-medium"
             />
           </div>
 
-          {/* Submit Action Button */}
+          {/* Submit Search Button */}
           <button 
             type="submit" 
-            className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl md:rounded-full text-xs transition-all shadow-md shadow-indigo-600/10 whitespace-nowrap flex-shrink-0"
+            className="w-full md:w-auto bg-[#2557a7] hover:bg-[#1f488c] text-white font-bold py-2.5 px-6 rounded-xl md:rounded-r-2xl md:rounded-l-none text-sm transition-colors whitespace-nowrap flex-shrink-0"
           >
-            Find Jobs
+            Find jobs
           </button>
         </form>
 
-        {/* 2. LOGO AND TAGLINE SECTION */}
-        <div className="text-center space-y-5">
-          <div className="flex items-center justify-center space-x-2.5 text-indigo-400">
-            <Terminal className="w-12 h-12 stroke-[2.5]" />
-            <span className="text-3xl font-extrabold tracking-tight text-white">Dev<span className="text-indigo-500">Connect</span></span>
+        {/* Big Brand Logo & Introduction */}
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center space-x-3 text-[#2557a7]">
+            <Terminal className="w-14 h-14 stroke-[3]" />
+            <span className="text-5xl font-extrabold tracking-tight">devconnect</span>
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-200">Your next developer job starts here</h2>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
-              Create an account or sign in to build your timeline portfolio, scan resumes, and analyze real-time Kafka streams.
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-bold text-[#2d2d2d]">Your next job starts here</h2>
+            <p className="text-xs text-[#595959] max-w-sm mx-auto leading-relaxed">
+              Create an account or sign in to see your personalised job recommendations.
             </p>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="pt-2 flex justify-center items-center">
+          {/* Get Started CTA Button */}
+          <div className="flex justify-center pt-2">
             <button
               onClick={handleGuestAccess}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-2xl text-xs flex items-center space-x-2 transition-all shadow-lg shadow-indigo-600/20"
+              className="bg-[#2557a7] hover:bg-[#1f488c] text-white font-bold py-2.5 px-8 rounded-full text-xs flex items-center justify-center space-x-1.5 transition-colors shadow-md shadow-[#2557a7]/20"
             >
               <span>Get Started</span>
-              <ArrowRight size={14} />
+              <ArrowRight size={13} />
             </button>
           </div>
         </div>
 
-        {/* 3. COLLAPSIBLE TRENDING DROPDOWN */}
-        <div className="w-full max-w-md mx-auto">
+        {/* Trending Accordion Dropdown */}
+        <div className="w-full max-w-md mx-auto text-center">
           <button
             onClick={() => setIsTrendingOpen(!isTrendingOpen)}
-            className="w-full flex items-center justify-center space-x-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-350 transition-colors uppercase tracking-wider"
+            className="inline-flex items-center space-x-1.5 text-[10px] font-bold text-[#595959] hover:text-slate-900 transition-colors uppercase tracking-wider"
           >
             <span>What's trending on DevConnect</span>
-            {isTrendingOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            {isTrendingOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
           </button>
 
           <AnimatePresence>
@@ -137,22 +158,22 @@ const Landing = () => {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="bg-slate-950/60 border border-slate-900 rounded-2xl p-4 mt-3 grid grid-cols-2 gap-3 text-[10px] text-slate-400">
-                  <div className="flex items-center space-x-2 bg-slate-900/40 p-2.5 rounded-xl border border-white/5">
-                    <Zap size={12} className="text-indigo-400" />
-                    <span>Apache Kafka streams logging</span>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mt-2.5 grid grid-cols-2 gap-2 text-[9px] text-[#595959] text-left">
+                  <div className="p-2.5 bg-white border border-slate-100 rounded-lg shadow-sm">
+                    <span className="font-bold text-slate-800 block">Apache Kafka Ingestion</span>
+                    <span className="text-[8px] text-slate-500 block mt-0.5">Live user event messaging</span>
                   </div>
-                  <div className="flex items-center space-x-2 bg-slate-900/40 p-2.5 rounded-xl border border-white/5">
-                    <Database size={12} className="text-cyan-400" />
-                    <span>HDFS splits WordCount</span>
+                  <div className="p-2.5 bg-white border border-slate-100 rounded-lg shadow-sm">
+                    <span className="font-bold text-slate-800 block">Apache Spark Core</span>
+                    <span className="text-[8px] text-slate-500 block mt-0.5">Stream window aggregations</span>
                   </div>
-                  <div className="flex items-center space-x-2 bg-slate-900/40 p-2.5 rounded-xl border border-white/5">
-                    <Flame size={12} className="text-amber-500" />
-                    <span>18d Weekly Commit Streaks</span>
+                  <div className="p-2.5 bg-white border border-slate-100 rounded-lg shadow-sm">
+                    <span className="font-bold text-slate-800 block">Hadoop MapReduce</span>
+                    <span className="text-[8px] text-slate-500 block mt-0.5">Distributed HDFS block analysis</span>
                   </div>
-                  <div className="flex items-center space-x-2 bg-slate-900/40 p-2.5 rounded-xl border border-white/5">
-                    <ShieldCheck size={12} className="text-purple-400" />
-                    <span>ATS CV Optimization scanner</span>
+                  <div className="p-2.5 bg-white border border-slate-100 rounded-lg shadow-sm">
+                    <span className="font-bold text-slate-800 block">ATS CV Scanner</span>
+                    <span className="text-[8px] text-slate-500 block mt-0.5">Resume optimization score</span>
                   </div>
                 </div>
               </motion.div>
@@ -160,43 +181,32 @@ const Landing = () => {
           </AnimatePresence>
         </div>
 
-        {/* 4. TECH ROLES CATEGORIES (Grid Selector) */}
-        <div className="space-y-6 pt-4">
-          <h3 className="text-xs font-bold text-slate-450 uppercase tracking-wider text-center">Popular developer roles</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {jobCategories.map((cat, idx) => (
-              <div 
-                key={idx}
-                onClick={() => {
-                  loginAsGuest();
-                  addToast(`Opening ${cat.title} directory`, 'success');
-                  navigate(`/jobs?q=${cat.title}`);
-                }}
-                className="p-4 bg-slate-950 border border-slate-900 rounded-2xl hover:border-slate-800 hover:bg-slate-900/10 transition-all flex justify-between items-center group cursor-pointer"
-              >
-                <div className="space-y-1">
-                  <span className="font-bold text-xs text-slate-200 group-hover:text-indigo-400 transition-colors block">{cat.title}</span>
-                  <span className="text-[9px] text-slate-500 block font-mono">{cat.desc}</span>
-                </div>
-                <span className="text-[9px] font-bold text-slate-500 bg-slate-900 px-2 py-1 rounded-md">{cat.count}</span>
-              </div>
-            ))}
+      </main>
+
+      {/* 3. INDEED-STYLE FOOTER */}
+      <footer className="w-full border-t border-slate-200 bg-[#f3f2f1] py-5 px-6 md:px-12 text-[#595959] text-[10px] font-medium flex-shrink-0">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 justify-center md:justify-start">
+            <span onClick={handleGuestAccess} className="hover:underline cursor-pointer">Career advice</span>
+            <span onClick={handleGuestAccess} className="hover:underline cursor-pointer">Browse jobs</span>
+            <span onClick={handleGuestAccess} className="hover:underline cursor-pointer">Browse companies</span>
+            <span onClick={handleGuestAccess} className="hover:underline cursor-pointer">Salaries</span>
+            <span onClick={handleGuestAccess} className="hover:underline cursor-pointer">DevConnect Events</span>
+            <span onClick={handleGuestAccess} className="hover:underline cursor-pointer">Work at DevConnect</span>
+            <span onClick={handleGuestAccess} className="hover:underline cursor-pointer">About</span>
+            <span onClick={handleGuestAccess} className="hover:underline cursor-pointer">Help</span>
+          </div>
+
+          <div className="flex space-x-3 text-slate-400">
+            <span>© 2026 DevConnect</span>
+            <span>•</span>
+            <span className="hover:underline cursor-pointer text-[#595959]">Accessibility</span>
+            <span>•</span>
+            <span className="hover:underline cursor-pointer text-[#595959]">Privacy Centre</span>
+            <span>•</span>
+            <span className="hover:underline cursor-pointer text-[#595959]">Terms</span>
           </div>
         </div>
-
-      </div>
-
-      {/* 5. INLINE TABULAR FOOTER */}
-      <footer className="border-t border-white/5 pt-6 text-[10px] text-slate-550 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-          <span className="hover:text-slate-400 cursor-pointer">About DevConnect</span>
-          <span className="hover:text-slate-400 cursor-pointer">Browse Jobs</span>
-          <span className="hover:text-slate-400 cursor-pointer">Developer Directory</span>
-          <span className="hover:text-slate-400 cursor-pointer">Security Center</span>
-          <span className="hover:text-slate-400 cursor-pointer">Terms of Use</span>
-          <span className="hover:text-slate-400 cursor-pointer">Privacy Guidelines</span>
-        </div>
-        <span>© 2026 DevConnect Inc. All rights reserved.</span>
       </footer>
 
     </div>
