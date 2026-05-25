@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
+import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Components & Pages
 import Navbar from './components/Navbar';
@@ -80,13 +82,17 @@ const AppLayout = () => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <SocketProvider>
-        <Router>
-          <AppLayout />
-        </Router>
-      </SocketProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <Router>
+              <AppLayout />
+            </Router>
+          </SocketProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 };
 
