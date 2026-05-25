@@ -17,6 +17,24 @@ const postSchema = new mongoose.Schema({
   }]
 }, { timestamps: true });
 
-const Post = mongoose.model('Post', postSchema);
+const MongoosePost = mongoose.model('Post', postSchema);
+const mockDb = require('./mockDb');
 
-module.exports = Post;
+const PostProxy = new Proxy(function() {}, {
+  get(target, prop) {
+    const isConnected = mongoose.connection.readyState === 1;
+    const actualModel = isConnected ? MongoosePost : mockDb.getModel('Post', postSchema);
+    const value = actualModel[prop];
+    if (typeof value === 'function') {
+      return value.bind(actualModel);
+    }
+    return value;
+  },
+  construct(target, args) {
+    const isConnected = mongoose.connection.readyState === 1;
+    const actualModel = isConnected ? MongoosePost : mockDb.getModel('Post', postSchema);
+    return new actualModel(...args);
+  }
+});
+
+module.exports = PostProxy;

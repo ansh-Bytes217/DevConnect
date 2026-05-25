@@ -16,6 +16,24 @@ const jobSchema = new mongoose.Schema({
   applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
-const Job = mongoose.model('Job', jobSchema);
+const MongooseJob = mongoose.model('Job', jobSchema);
+const mockDb = require('./mockDb');
 
-module.exports = Job;
+const JobProxy = new Proxy(function() {}, {
+  get(target, prop) {
+    const isConnected = mongoose.connection.readyState === 1;
+    const actualModel = isConnected ? MongooseJob : mockDb.getModel('Job', jobSchema);
+    const value = actualModel[prop];
+    if (typeof value === 'function') {
+      return value.bind(actualModel);
+    }
+    return value;
+  },
+  construct(target, args) {
+    const isConnected = mongoose.connection.readyState === 1;
+    const actualModel = isConnected ? MongooseJob : mockDb.getModel('Job', jobSchema);
+    return new actualModel(...args);
+  }
+});
+
+module.exports = JobProxy;

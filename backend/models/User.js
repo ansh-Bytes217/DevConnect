@@ -27,6 +27,24 @@ const userSchema = new mongoose.Schema({
   connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
-const User = mongoose.model('User', userSchema);
+const MongooseUser = mongoose.model('User', userSchema);
+const mockDb = require('./mockDb');
 
-module.exports = User;
+const UserProxy = new Proxy(function() {}, {
+  get(target, prop) {
+    const isConnected = mongoose.connection.readyState === 1;
+    const actualModel = isConnected ? MongooseUser : mockDb.getModel('User', userSchema);
+    const value = actualModel[prop];
+    if (typeof value === 'function') {
+      return value.bind(actualModel);
+    }
+    return value;
+  },
+  construct(target, args) {
+    const isConnected = mongoose.connection.readyState === 1;
+    const actualModel = isConnected ? MongooseUser : mockDb.getModel('User', userSchema);
+    return new actualModel(...args);
+  }
+});
+
+module.exports = UserProxy;
