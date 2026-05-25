@@ -13,7 +13,16 @@ const jobSchema = new mongoose.Schema({
   description: { type: String, required: true },
   skillsRequired: [{ type: String }],
   postedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  applicants: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    username: { type: String },
+    email: { type: String },
+    phone: { type: String },
+    portfolio: { type: String },
+    resumeName: { type: String },
+    matchScore: { type: Number },
+    status: { type: String, enum: ['Pending', 'Shortlisted', 'Rejected'], default: 'Pending' }
+  }]
 }, { timestamps: true });
 
 const MongooseJob = mongoose.model('Job', jobSchema);

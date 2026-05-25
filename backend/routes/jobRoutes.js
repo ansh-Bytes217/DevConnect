@@ -1,6 +1,7 @@
 // routes/jobRoutes.js
 const express = require('express');
 const Job = require('../models/Job');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const bigDataHelper = require('../utils/bigDataHelper');
 const router = express.Router();
@@ -64,15 +65,30 @@ router.post('/', auth, async (req, res) => {
 // Apply to a job listing
 router.post('/:id/apply', auth, async (req, res) => {
   try {
+    const { phone, portfolio, resumeName, matchScore } = req.body;
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ msg: 'Job listing not found' });
 
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
     // Check if user already applied
-    if (job.applicants.includes(req.user.userId)) {
+    const alreadyApplied = job.applicants && job.applicants.some(app => app.userId && app.userId.toString() === req.user.userId);
+    if (alreadyApplied) {
       return res.status(400).json({ msg: 'You have already applied for this job' });
     }
 
-    job.applicants.push(req.user.userId);
+    job.applicants.push({
+      userId: req.user.userId,
+      username: user.username,
+      email: user.email,
+      phone: phone || '',
+      portfolio: portfolio || '',
+      resumeName: resumeName || 'default_developer_resume.pdf',
+      matchScore: matchScore || 70,
+      status: 'Pending'
+    });
+
     await job.save();
 
     // Log job applied event
@@ -84,6 +100,34 @@ router.post('/:id/apply', auth, async (req, res) => {
     });
 
     res.status(200).json({ msg: 'Application submitted successfully', job });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update applicant status (Shortlist / Reject)
+router.put('/:id/applicants/:applicantUserId', auth, async (req, res) => {
+  try {
+    const { status } = req.body; // 'Shortlisted' | 'Rejected' | 'Pending'
+    if (!['Pending', 'Shortlisted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ msg: 'Invalid status value' });
+    }
+
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ msg: 'Job listing not found' });
+
+    // Ensure user is the creator
+    if (job.postedBy.toString() !== req.user.userId) {
+      return res.status(401).json({ msg: 'User not authorized to update candidates' });
+    }
+
+    const applicant = job.applicants.find(app => app.userId && app.userId.toString() === req.params.applicantUserId);
+    if (!applicant) return res.status(404).json({ msg: 'Applicant not found' });
+
+    applicant.status = status;
+    await job.save();
+
+    res.status(200).json({ msg: `Applicant status updated to ${status}`, job });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

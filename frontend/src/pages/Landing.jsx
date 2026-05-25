@@ -20,17 +20,25 @@ const Landing = () => {
   // Dropdown state
   const [isTrendingOpen, setIsTrendingOpen] = useState(false);
 
-  const handleGuestAccess = () => {
-    loginAsGuest();
-    addToast('Logged in as Guest Dev (Sandbox Mode)', 'success');
-    navigate('/');
+  const handleGuestAccess = async () => {
+    try {
+      await loginAsGuest();
+      addToast('Logged in as Guest Dev (Sandbox Mode)', 'success');
+      navigate('/');
+    } catch (err) {
+      addToast('Failed to login as guest', 'error');
+    }
   };
 
-  const handleSearchSubmit = (e) => {
+  const handleSearchSubmit = async (e) => {
     e.preventDefault();
-    loginAsGuest();
-    addToast(`Searching for "${roleQuery}" in "${locQuery}" (Guest Mode)`, 'info');
-    navigate(`/jobs?q=${roleQuery}`);
+    try {
+      await loginAsGuest();
+      addToast(`Searching for "${roleQuery}" in "${locQuery}" (Guest Mode)`, 'info');
+      navigate(`/jobs?q=${roleQuery}`);
+    } catch (err) {
+      addToast('Failed to login as guest', 'error');
+    }
   };
 
   return (

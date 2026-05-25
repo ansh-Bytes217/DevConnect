@@ -265,23 +265,36 @@ const Jobs = () => {
     }, 1200);
   };
 
-  const handleUpdateApplicantStatus = (jobId, applicantUserId, newStatus) => {
-    const updatedJobs = jobs.map(j => {
-      if (j._id === jobId) {
-        const updatedApplicants = j.applicants.map(app => {
-          if (app.userId === applicantUserId) {
-            return { ...app, status: newStatus };
-          }
-          return app;
-        });
-        return { ...j, applicants: updatedApplicants };
-      }
-      return j;
-    });
+  const handleUpdateApplicantStatus = async (jobId, applicantUserId, newStatus) => {
+    const token = localStorage.getItem('token');
+    if (!token || token === 'mock-guest-token') {
+      const updatedJobs = jobs.map(j => {
+        if (j._id === jobId) {
+          const updatedApplicants = j.applicants.map(app => {
+            if (app.userId === applicantUserId) {
+              return { ...app, status: newStatus };
+            }
+            return app;
+          });
+          return { ...j, applicants: updatedApplicants };
+        }
+        return j;
+      });
 
-    setJobs(updatedJobs);
-    if (localStorage.getItem('token') === 'mock-guest-token') {
+      setJobs(updatedJobs);
       localStorage.setItem('mock_jobs', JSON.stringify(updatedJobs));
+      return;
+    }
+
+    try {
+      await axios.put(`/jobs/${jobId}/applicants/${applicantUserId}`, { status: newStatus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchJobs();
+      alert(`Candidate status updated to ${newStatus}`);
+    } catch (err) {
+      console.error('Error updating candidate status:', err.message);
+      alert('Failed to update candidate status on server.');
     }
   };
 

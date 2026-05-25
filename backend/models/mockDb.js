@@ -20,6 +20,182 @@ if (!fs.existsSync(dbPath)) {
 
 let db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
 
+// Seed database on startup if User collection is empty
+if (!db.User || db.User.length === 0) {
+  const defaultUsers = [
+    {
+      _id: "mock_guest_9999",
+      username: "GuestDev_9999",
+      email: "guest@devconnect.com",
+      password: "$2a$10$fVzYZh8diEDdDRiBsovkOeTIix.d4WDEK5N24EuaWxB9YpH85jVku", // password123
+      profilePicture: "https://api.dicebear.com/7.x/bottts/svg?seed=Guest",
+      bio: "Lead Full-Stack Architect | Scaling Solutions",
+      githubUsername: "gaearon",
+      skills: [
+        { name: "React", endorsedBy: [] }, 
+        { name: "Node.js", endorsedBy: [] },
+        { name: "Mongoose Proxies", endorsedBy: [] },
+        { name: "Offline Caching", endorsedBy: [] }
+      ],
+      experience: [
+        { 
+          company: "DevConnect Inc. (Scale-out Labs)", 
+          role: "Lead Full-Stack Architect", 
+          duration: "2026 - Present", 
+          description: "Architected and built the full-stack DevConnect platform (WebSockets chat, Jitsi meet, ATS scanner, Kafka diagnostics). Resolved database server infrastructure constraints by designing an automatic Mongoose Proxy schema wrapper that falls back seamlessly to localized JSON caches." 
+        }
+      ],
+      education: [{ school: "Self-Taught Academy", degree: "Software Engineer", duration: "2024 - 2026" }],
+      badge: "open-to-work",
+      connections: ["mock_user_dan", "mock_user_sarah"]
+    },
+    {
+      _id: "mock_user_dan",
+      username: "Dan_The_Coder",
+      email: "dan@coder.dev",
+      password: "$2a$10$fVzYZh8diEDdDRiBsovkOeTIix.d4WDEK5N24EuaWxB9YpH85jVku",
+      profilePicture: "https://api.dicebear.com/7.x/bottts/svg?seed=Dan",
+      bio: "Senior Frontend Engineer (React/TypeScript)",
+      githubUsername: "gaearon",
+      skills: [
+        { name: "React", endorsedBy: [] },
+        { name: "TypeScript", endorsedBy: [] }
+      ],
+      experience: [
+        {
+          company: "Vercel",
+          role: "Senior Frontend Engineer",
+          duration: "2023 - Present",
+          description: "Working on next-generation rendering engines and styling solutions."
+        }
+      ],
+      education: [{ school: "Tech University", degree: "Computer Science", duration: "2019 - 2023" }],
+      badge: "hiring",
+      connections: ["mock_guest_9999"]
+    },
+    {
+      _id: "mock_user_sarah",
+      username: "Sarah_ShaderArt",
+      email: "sarah@shaderart.dev",
+      password: "$2a$10$fVzYZh8diEDdDRiBsovkOeTIix.d4WDEK5N24EuaWxB9YpH85jVku",
+      profilePicture: "https://api.dicebear.com/7.x/bottts/svg?seed=Sarah",
+      bio: "Creative Frontend & WebGL Developer",
+      githubUsername: "yyx990803",
+      skills: [
+        { name: "ThreeJS", endorsedBy: [] },
+        { name: "WebGL", endorsedBy: [] }
+      ],
+      experience: [
+        {
+          company: "Supabase",
+          role: "WebGL Graphics Developer",
+          duration: "2022 - Present",
+          description: "Creating interactive 3D graphs and analytics representations."
+        }
+      ],
+      education: [{ school: "Design Academy", degree: "Digital Arts", duration: "2018 - 2022" }],
+      badge: "open-to-work",
+      connections: ["mock_guest_9999"]
+    }
+  ];
+
+  const defaultConnections = [
+    {
+      _id: "mock_conn_dan",
+      userId1: "mock_guest_9999",
+      userId2: "mock_user_dan",
+      status: "accepted",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      _id: "mock_conn_sarah",
+      userId1: "mock_guest_9999",
+      userId2: "mock_user_sarah",
+      status: "accepted",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
+
+  const defaultPosts = [
+    {
+      _id: "mock_post_dan",
+      content: "Just migrated our entire dashboard feed sorting to a custom React hook combined with local storage cache safeguards! Performance is down to sub-10ms now.",
+      imageUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c",
+      userId: "mock_user_dan",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+    },
+    {
+      _id: "mock_post_sarah",
+      content: "Check out this WebGL pixel shader I wrote for the new Big Data Event Storm analytics console! Looks like digital rain cascading down the telemetry charts.",
+      imageUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b",
+      userId: "mock_user_sarah",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString()
+    }
+  ];
+
+  const defaultJobs = [
+    {
+      _id: "mock_job_dan",
+      title: "Senior Frontend Engineer (React/TypeScript)",
+      company: "Vercel",
+      location: "Remote (US/Europe)",
+      jobType: "Full-time",
+      description: "We are looking for a Senior Frontend Engineer to help build the future of Web development. You will contribute directly to Next.js dashboard features, deploy optimizations, and custom web core vitals trackers. Experience with caching and edge architectures is highly valued.",
+      skillsRequired: ["React", "TypeScript", "Next.js", "Tailwind CSS"],
+      postedBy: "mock_user_dan",
+      applicants: [
+        {
+          userId: "mock_user_sarah",
+          username: "Sarah_ShaderArt",
+          email: "sarah@shaderart.dev",
+          phone: "+1 415-555-2026",
+          portfolio: "https://sarahshader.art",
+          resumeName: "sarah_shader_threejs.pdf",
+          matchScore: 94,
+          status: "Shortlisted"
+        },
+        {
+          userId: "mock_guest_9999",
+          username: "GuestDev_9999",
+          email: "guest@devconnect.com",
+          phone: "+1 650-555-0912",
+          portfolio: "https://github.com/guestdev",
+          resumeName: "lead_architect_cv.pdf",
+          matchScore: 88,
+          status: "Pending"
+        }
+      ],
+      views: 142,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+    },
+    {
+      _id: "mock_job_sarah",
+      title: "Backend Systems Engineer (Golang & Kubernetes)",
+      company: "Supabase",
+      location: "Singapore / Hybrid",
+      jobType: "Full-time",
+      description: "Join our systems team to work on Postgres clustering, connection pools, and containerized scale-out configurations. You will write high-performance Go libraries and manage cloud-native deployments.",
+      skillsRequired: ["Go", "Postgres", "Kubernetes", "Docker"],
+      postedBy: "mock_user_sarah",
+      applicants: [],
+      views: 89,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
+    }
+  ];
+
+  db.User = defaultUsers;
+  db.Connection = defaultConnections;
+  db.Post = defaultPosts;
+  db.Job = defaultJobs;
+  fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+}
+
 function saveDb() {
   fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 }
