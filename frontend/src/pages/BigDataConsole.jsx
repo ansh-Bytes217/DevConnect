@@ -15,7 +15,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const BigDataConsole = () => {
   const { user } = useAuth();
-  const socket = useSocket();
+  const { socket } = useSocket();
 
   // Tabs: 'topology' | 'kafka' | 'spark' | 'hadoop'
   const [activeTab, setActiveTab] = useState('topology');

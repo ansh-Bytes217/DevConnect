@@ -14,7 +14,8 @@ if (!fs.existsSync(dbPath)) {
     Post: [],
     Connection: [],
     Message: [],
-    Job: []
+    Job: [],
+    CommunityMessage: []
   }, null, 2));
 }
 
@@ -189,10 +190,44 @@ if (!db.User || db.User.length === 0) {
     }
   ];
 
+  const defaultCommunityMessages = [
+    {
+      _id: "mock_cmsg_1",
+      serverId: "srv_ai",
+      channel: "#general",
+      sender: "mock_user_dan",
+      username: "Dan_The_Coder",
+      text: "Has anyone checked out the new model release parameters? The token weights look incredibly optimized.",
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      _id: "mock_cmsg_2",
+      serverId: "srv_ai",
+      channel: "#general",
+      sender: "mock_guest_9999",
+      username: "GuestDev_9999",
+      text: "Yes, I did! Especially the latency improvements are impressive.",
+      createdAt: new Date(Date.now() - 1800000).toISOString(),
+      updatedAt: new Date(Date.now() - 1800000).toISOString()
+    },
+    {
+      _id: "mock_cmsg_3",
+      serverId: "srv_web",
+      channel: "#general",
+      sender: "mock_user_sarah",
+      username: "Sarah_ShaderArt",
+      text: "Just updated three.js shader layers. WebGL drawing calls dropped by 40%!",
+      createdAt: new Date(Date.now() - 7200000).toISOString(),
+      updatedAt: new Date(Date.now() - 7200000).toISOString()
+    }
+  ];
+
   db.User = defaultUsers;
   db.Connection = defaultConnections;
   db.Post = defaultPosts;
   db.Job = defaultJobs;
+  db.CommunityMessage = defaultCommunityMessages;
   fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 }
 

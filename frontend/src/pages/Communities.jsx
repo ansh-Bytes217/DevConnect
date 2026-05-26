@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
+import axios from 'axios';
 import { 
   Terminal, Hash, Send, Users, Cpu, ShieldAlert, 
   Code, MessageCircle, Gamepad2, Sparkles, MessageSquare 
@@ -32,36 +34,102 @@ const Communities = () => {
     { id: 'm4', username: 'Recruiter_OpenAI', status: 'in-meeting', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Recruiter', bio: 'Hiring for AI Systems', badge: 'hiring' },
   ];
 
-  // Chat messages cache map
-  const [chatLogs, setChatLogs] = useState({
+  const { socket } = useSocket();
+  const [messages, setMessages] = useState([]);
+
+  // Default fallback chat logs for guest mode
+  const defaultChatLogs = {
     'srv_ai_#general': [
-      { id: 'msg_1', username: 'Dan_The_Coder', text: 'Has anyone checked out the new model release parameters? The token weights look incredibly optimized.', time: '11:15 AM' },
-      { id: 'msg_2', username: 'Recruiter_OpenAI', text: 'Hey Dan, we are actually looking for developers experienced with weight optimizations. Feel free to peek at our job listings! 🚀', time: '11:20 AM' },
+      { _id: 'msg_1', username: 'Dan_The_Coder', text: 'Has anyone checked out the new model release parameters? The token weights look incredibly optimized.', createdAt: new Date(Date.now() - 3600000).toISOString() },
+      { _id: 'msg_2', username: 'Recruiter_OpenAI', text: 'Hey Dan, we are actually looking for developers experienced with weight optimizations. Feel free to peek at our job listings! 🚀', createdAt: new Date(Date.now() - 1800000).toISOString() },
     ],
     'srv_web_#general': [
-      { id: 'msg_3', username: 'Sarah_ShaderArt', text: 'Just updated three.js shader layers. WebGL drawing calls dropped by 40%!', time: '10:05 AM' }
+      { _id: 'msg_3', username: 'Sarah_ShaderArt', text: 'Just updated three.js shader layers. WebGL drawing calls dropped by 40%!', createdAt: new Date(Date.now() - 7200000).toISOString() }
     ]
-  });
+  };
 
   const getActiveChatKey = () => `${activeServer.id}_${activeChannel}`;
 
-  const handleSendMessage = (e) => {
+  // Fetch message history and join websocket channel room
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const chatKey = getActiveChatKey();
+
+    if (token && token !== 'mock-guest-token') {
+      // Fetch channel messages from backend database
+      axios.get(`/communities/messages/${activeServer.id}/${activeChannel.replace('#', '')}`)
+        .then(res => {
+          setMessages(res.data);
+        })
+        .catch(err => {
+          console.warn('Failed to load community message history:', err.message);
+          setMessages([]);
+        });
+
+      // Join socket room
+      if (socket) {
+        socket.emit('join_channel', { serverId: activeServer.id, channel: activeChannel });
+      }
+    } else {
+      // Load from local storage or default cached messages
+      const stored = localStorage.getItem(`guest_comm_${chatKey}`);
+      if (stored) {
+        setMessages(JSON.parse(stored));
+      } else {
+        const fallback = defaultChatLogs[chatKey] || [];
+        localStorage.setItem(`guest_comm_${chatKey}`, JSON.stringify(fallback));
+        setMessages(fallback);
+      }
+    }
+  }, [activeServer, activeChannel, socket]);
+
+  // Setup socket listener for incoming channel messages
+  useEffect(() => {
+    if (socket) {
+      const handleIncomingChannelMessage = (message) => {
+        // Confirm message belongs to active server/channel room
+        const activeChanClean = activeChannel;
+        if (message.serverId === activeServer.id && message.channel === activeChanClean) {
+          setMessages((prev) => [...prev, message]);
+        }
+      };
+
+      socket.on('receive_channel_message', handleIncomingChannelMessage);
+
+      return () => {
+        socket.off('receive_channel_message', handleIncomingChannelMessage);
+      };
+    }
+  }, [socket, activeServer, activeChannel]);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
     const chatKey = getActiveChatKey();
-    const newMsg = {
-      id: `user_msg_${Math.random()}`,
-      username: currentUser?.username || 'GuestDev',
-      text: inputText.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
+    const token = localStorage.getItem('token');
 
-    const currentLogs = chatLogs[chatKey] || [];
-    setChatLogs({
-      ...chatLogs,
-      [chatKey]: [...currentLogs, newMsg]
-    });
+    if (token && token !== 'mock-guest-token' && socket) {
+      socket.emit('send_channel_message', {
+        serverId: activeServer.id,
+        channel: activeChannel,
+        senderId: currentUser._id,
+        text: inputText.trim()
+      });
+    } else {
+      // Guest mode: save locally
+      const guestMsg = {
+        _id: `guest_comm_msg_${Math.random()}`,
+        username: currentUser?.username || 'GuestDev',
+        text: inputText.trim(),
+        createdAt: new Date().toISOString()
+      };
+
+      const updated = [...messages, guestMsg];
+      setMessages(updated);
+      localStorage.setItem(`guest_comm_${chatKey}`, JSON.stringify(updated));
+    }
+
     setInputText('');
   };
 
@@ -143,8 +211,8 @@ const Communities = () => {
 
           {/* Messages */}
           <div className="flex-1 p-6 overflow-y-auto space-y-4">
-            {activeMessages.map((msg) => (
-              <div key={msg.id} className="flex space-x-3.5 items-start">
+            {messages.map((msg) => (
+              <div key={msg._id || msg.id} className="flex space-x-3.5 items-start">
                 <img
                   src={`https://api.dicebear.com/7.x/bottts/svg?seed=${msg.username}`}
                   alt="avatar"
@@ -153,7 +221,7 @@ const Communities = () => {
                 <div className="text-xs">
                   <div className="flex items-center space-x-2">
                     <span className="font-bold text-slate-200">{msg.username}</span>
-                    <span className="text-[9px] text-slate-500">{msg.time}</span>
+                    <span className="text-[9px] text-slate-500">{msg.time || (msg.createdAt && new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))}</span>
                   </div>
                   <p className="text-slate-400 mt-1.5 leading-relaxed bg-slate-900/40 border border-slate-900 p-2.5 rounded-xl">
                     {msg.text}
@@ -161,7 +229,7 @@ const Communities = () => {
                 </div>
               </div>
             ))}
-            {activeMessages.length === 0 && (
+            {messages.length === 0 && (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2">
                 <MessageSquare className="w-10 h-10 text-slate-700 animate-pulse" />
                 <p className="text-xs text-slate-500 font-semibold">Welcome to the beginning of the #{activeChannel.replace('#', '')} channel!</p>

@@ -12,6 +12,7 @@ const connectionRoutes = require('./routes/connectionRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const communityRoutes = require('./routes/communityRoutes');
 const Message = require('./models/Message');
 const bigDataHelper = require('./utils/bigDataHelper');
 
@@ -39,6 +40,7 @@ app.use('/api/connections', connectionRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/communities', communityRoutes);
 
 // Socket.io Real-Time Event Handlers
 io.on('connection', (socket) => {
@@ -73,6 +75,41 @@ io.on('connection', (socket) => {
   socket.on('share_meet', ({ senderUsername, roomCode, connectionsList }) => {
     // Notify all connections of the meet call room
     socket.broadcast.emit('meet_invite', { senderUsername, roomCode, connectionsList });
+  });
+
+  // Join a community channel room
+  socket.on('join_channel', ({ serverId, channel }) => {
+    const roomName = `${serverId}_${channel}`;
+    socket.join(roomName);
+    console.log(`Socket ${socket.id} joined channel room: ${roomName}`);
+  });
+
+  // User sends community message
+  socket.on('send_channel_message', async ({ serverId, channel, senderId, text }) => {
+    try {
+      const CommunityMessage = require('./models/CommunityMessage');
+      const User = require('./models/User');
+      const user = await User.findById(senderId);
+      const senderUsername = user ? user.username : 'Developer';
+
+      const communityMessage = new CommunityMessage({
+        serverId,
+        channel,
+        sender: senderId,
+        username: senderUsername,
+        text
+      });
+      await communityMessage.save();
+
+      const roomName = `${serverId}_${channel}`;
+      io.to(roomName).emit('receive_channel_message', {
+        ...communityMessage._doc || communityMessage,
+        _id: communityMessage._id,
+        createdAt: communityMessage.createdAt
+      });
+    } catch (err) {
+      console.error('Socket send_channel_message error:', err.message);
+    }
   });
 
   socket.on('disconnect', () => {

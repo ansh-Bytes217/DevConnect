@@ -73,7 +73,10 @@ router.post('/:id/apply', auth, async (req, res) => {
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
     // Check if user already applied
-    const alreadyApplied = job.applicants && job.applicants.some(app => app.userId && app.userId.toString() === req.user.userId);
+    if (!job.applicants) {
+      job.applicants = [];
+    }
+    const alreadyApplied = job.applicants.some(app => app.userId && app.userId.toString() === req.user.userId);
     if (alreadyApplied) {
       return res.status(400).json({ msg: 'You have already applied for this job' });
     }
@@ -121,6 +124,9 @@ router.put('/:id/applicants/:applicantUserId', auth, async (req, res) => {
       return res.status(401).json({ msg: 'User not authorized to update candidates' });
     }
 
+    if (!job.applicants) {
+      job.applicants = [];
+    }
     const applicant = job.applicants.find(app => app.userId && app.userId.toString() === req.params.applicantUserId);
     if (!applicant) return res.status(404).json({ msg: 'Applicant not found' });
 
